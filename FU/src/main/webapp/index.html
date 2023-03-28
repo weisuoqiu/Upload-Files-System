@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #dropzone {
+            width: 100px;
+            /*margin: 0 auto;*/
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+        }
+        #file-input {
+            display: none;
+        }
+        #file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #file-list li {
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="container">
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="text" name="username" id="myInput"> <br>
+
+    <div id="dropzone">
+        <input type="file" id="file-input" multiple>
+        <label for="file-input">选择文件</label>
+        <ul id="file-list"></ul>
+    </div><br>
+    <input type="submit" value="上 传">
+</form>
+</div>
+
+
+<script type="text/javascript">
+    // 获取DOM元素
+    const dropzone = document.getElementById('dropzone');
+    const fileList = document.getElementById('file-list');
+    const fileInput = document.getElementById('file-input');
+    let myInput1=document.getElementById('myInput');
+    // alert(myInput1);
+    let nameValue="";
+
+    //给myInput绑定事件
+    myInput1.addEventListener('blur',function(){
+        nameValue=myInput1.value;
+        // console.log(nameValue);
+        // console.log(".....");
+        // alert(myInput1);
+    })
+    // 给dropzone绑定事件
+    dropzone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('dragover');
+        handleFiles(event.dataTransfer.files);
+    });
+
+    // 给fileInput绑定事件
+    fileInput.addEventListener('change', (event) => {
+        handleFiles(event.target.files);
+    });
+
+    // 处理选择的文件
+    function handleFiles(files) {
+        // 遍历每个文件
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            // 创建文件列表项
+            const listItem = document.createElement('li');
+            listItem.textContent = file.name;
+            fileList.appendChild(listItem);
+            // 上传文件
+            uploadFile(file, listItem);
+        }
+    }
+
+    // 上传文件
+    function uploadFile(file, listItem) {
+        // 创建XMLHttpRequest对象
+        const xhr = new XMLHttpRequest();
+        // 上传进度事件
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                listItem.textContent = file.name + ' (' + percentComplete.toFixed(0) + '%)';
+            }
+        });
+        // 上传完成事件
+        xhr.addEventListener('load', () => {
+            listItem.textContent = file.name + ' (上传完成)';
+        });
+        // 上传错误事件
+        xhr.addEventListener('error', () => {
+            listItem.textContent = file.name + ' (上传失败)';
+        });
+        // 构建FormData对象
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        formData.append('username',nameValue);
+        // 发送POST请求
+        xhr.open('POST', '/upload');
+        xhr.send(formData);
+    }
+
+</script>
+
+
+</body>
+</html>
